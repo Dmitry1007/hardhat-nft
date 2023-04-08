@@ -12,12 +12,16 @@ contract RandomIpfsNft is VRFConsumerBaseV2 {
     // Shiba Inu rare
     // St. Bernard common
 
+    // Chainlink VRF Variables
     VRFCoordinatorV2Interface private immutable i_vrfCoordinator;
     uint64 private immutable i_subscriptionId;
     bytes32 private immutable i_gasLane;
     uint32 private immutable i_callbackGasLimit;
     uint16 private constant REQUEST_CONFIRMATIONS = 3;
     uint32 private constant NUM_WORDS = 1;
+
+    // VRF Helpers
+    mapping(uint256 => address) public s_requestIdToSender;
 
     constructor(
         address vrfCoordinatorV2,
@@ -39,5 +43,11 @@ contract RandomIpfsNft is VRFConsumerBaseV2 {
             i_callbackGasLimit,
             NUM_WORDS
         );
+
+        s_requestIdToSender[requestId] = msg.sender;
+    }
+
+    function fulfillRandomWords(uint256 requestId, uint256[] memory randomWords) internal override {
+        address nftOwner = s_requestIdToSender[requestId];
     }
 }
