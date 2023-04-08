@@ -25,4 +25,14 @@ const { developmentChains } = require("../helper-hardhat-config")
                   assert.equal(tokenCounter.toString(), "0")
               })
           })
+
+          describe("Mint NFT", () => {
+              it("Mints a new NFT", async () => {
+                  const tokenCounterBefore = await basicNft.getTokenCounter()
+                  await basicNft.mint()
+                  const tokenCounterAfter = await basicNft.getTokenCounter()
+                  assert.equal(tokenCounterBefore.toString(), "0")
+                  assert.equal(tokenCounterAfter.toString(), "1")
+              })
+          })
       })
