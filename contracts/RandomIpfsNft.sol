@@ -4,8 +4,9 @@ pragma solidity ^0.8.7;
 
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
-contract RandomIpfsNft is VRFConsumerBaseV2 {
+contract RandomIpfsNft is VRFConsumerBaseV2, ERC721 {
     // when we mint an NFT, we will trigger a Chainlink VRF request to get a random number
     // using that number, we will get a random NFT
     // Pug super rare
@@ -23,12 +24,15 @@ contract RandomIpfsNft is VRFConsumerBaseV2 {
     // VRF Helpers
     mapping(uint256 => address) public s_requestIdToSender;
 
+    // NFT Variables
+    uint256 public s_tokenCounter;
+
     constructor(
         address vrfCoordinatorV2,
         uint64 subscriptionId,
         bytes32 gasLane, // keyHash
         uint32 callbackGasLimit
-    ) VRFConsumerBaseV2(vrfCoordinatorV2) {
+    ) VRFConsumerBaseV2(vrfCoordinatorV2) ERC721("Random IPFS NFT", "RIN") {
         i_vrfCoordinator = VRFCoordinatorV2Interface(vrfCoordinatorV2);
         i_gasLane = gasLane;
         i_subscriptionId = subscriptionId;
@@ -49,5 +53,7 @@ contract RandomIpfsNft is VRFConsumerBaseV2 {
 
     function fulfillRandomWords(uint256 requestId, uint256[] memory randomWords) internal override {
         address nftOwner = s_requestIdToSender[requestId];
+        uint256 newTokenId = s_tokenCounter;
+        _safeMint(nftOwner, newTokenId);
     }
 }
