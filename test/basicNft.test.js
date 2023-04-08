@@ -16,13 +16,13 @@ const { developmentChains } = require("../helper-hardhat-config")
           })
 
           describe("Constructor", () => {
-              it("should have the correct name", async () => {
+              it("Initializes the NFT Correctly.", async () => {
                   const name = await basicNft.name()
-                  assert.equal(name, "Dogie")
-              })
-              it("should have the correct symbol", async () => {
                   const symbol = await basicNft.symbol()
+                  const tokenCounter = await basicNft.getTokenCounter()
+                  assert.equal(name, "Dogie")
                   assert.equal(symbol, "DOG")
+                  assert.equal(tokenCounter.toString(), "0")
               })
           })
       })
