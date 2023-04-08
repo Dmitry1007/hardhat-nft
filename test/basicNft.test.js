@@ -1,11 +1,10 @@
 const { assert } = require("chai")
-const { ethers, network, deployments } = require("hardhat")
-const { describe } = require("node:test")
+const { network, deployments, ethers } = require("hardhat")
 const { developmentChains } = require("../helper-hardhat-config")
 
 !developmentChains.includes(network.name)
     ? describe.skip
-    : describe("BasicNft NFT Unit Tests", function () {
+    : describe("Basic NFT Unit Tests", function () {
           let basicNft, deployer
 
           beforeEach(async () => {
@@ -27,12 +26,24 @@ const { developmentChains } = require("../helper-hardhat-config")
           })
 
           describe("Mint NFT", () => {
-              it("Mints a new NFT", async () => {
-                  const tokenCounterBefore = await basicNft.getTokenCounter()
-                  await basicNft.mint()
-                  const tokenCounterAfter = await basicNft.getTokenCounter()
-                  assert.equal(tokenCounterBefore.toString(), "0")
-                  assert.equal(tokenCounterAfter.toString(), "1")
+              beforeEach(async () => {
+                  const txResponse = await basicNft.mint()
+                  await txResponse.wait(1)
+              })
+              it("Allows users to mint an NFT, and updates appropriately", async function () {
+                  const tokenURI = await basicNft.tokenURI(0)
+                  const tokenCounter = await basicNft.getTokenCounter()
+
+                  assert.equal(tokenCounter.toString(), "1")
+                  assert.equal(tokenURI, await basicNft.TOKEN_URI())
+              })
+              it("Show the correct balance and owner of an NFT", async function () {
+                  const deployerAddress = deployer.address
+                  const deployerBalance = await basicNft.balanceOf(deployerAddress)
+                  const owner = await basicNft.ownerOf("0")
+
+                  assert.equal(deployerBalance.toString(), "1")
+                  assert.equal(owner, deployerAddress)
               })
           })
       })
