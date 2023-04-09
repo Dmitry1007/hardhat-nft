@@ -5,11 +5,13 @@ pragma solidity ^0.8.7;
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 error RandomIpfsNft__RangeOutOfBounds();
 error RandomIpfsNft__InsufficientFee();
+error RandomIpfsNft__TransferFailed();
 
-contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage {
+contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
     // when we mint an NFT, we will trigger a Chainlink VRF request to get a random number
     // using that number, we will get a random NFT
     // Pug super rare 0-10, Shiba Inu rare 10-30, St. Bernard common 30-100
@@ -90,6 +92,14 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage {
             cumulativeSum = chanceArray[i];
         }
         revert RandomIpfsNft__RangeOutOfBounds();
+    }
+
+    function withdraw() public onlyOwner {
+        uint256 balance = address(this).balance;
+        (bool success, ) = msg.sender.call{value: balance}("");
+        if (!success) {
+            revert RandomIpfsNft__TransferFailed();
+        }
     }
 
     function getChanceArray() public pure returns (uint256[3] memory) {
