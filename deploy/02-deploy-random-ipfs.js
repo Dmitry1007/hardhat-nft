@@ -1,5 +1,5 @@
 const { network } = require("hardhat")
-const { developmentChains } = require("../helper-hardhat-config")
+const { developmentChains, networkConfig } = require("../helper-hardhat-config")
 const { verify } = require("../utils/verify")
 
 module.exports = async ({ getNamedAccounts, deployments }) => {
@@ -7,10 +7,10 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     const { deployer } = await getNamedAccounts()
     const chainId = network.config.chainId
 
-    let vrfCoordinatorV2Address, subscriptionId
+    let vrfCoordinatorV2Address, subscriptionId, vrfCoordinatorV2Mock
 
     if (developmentChains.includes(network.name)) {
-        const vrfCoordinatorV2Mock = await deployments.get("VRFCoordinatorV2Mock")
+        vrfCoordinatorV2Mock = await await ethers.getContract("VRFCoordinatorV2Mock")
         vrfCoordinatorV2Address = vrfCoordinatorV2Mock.address
         const tx = await vrfCoordinatorV2Mock.createSubscription()
         const txReceipt = await tx.wait(1)
@@ -35,4 +35,16 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
         tokenUris,
         networkConfig[chainId].mintFee,
     ]
+
+    const randomIpfsNft = await deploy("RandomIpfsNft", {
+        from: deployer,
+        args: args,
+        log: true,
+        waitConfirmations: network.config.blockConfirmations || 1,
+    })
+    log("----------------------------------------------------")
+    if (!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY) {
+        log("Verifying...")
+        await verify(randomIpfsNft.address, args)
+    }
 }
